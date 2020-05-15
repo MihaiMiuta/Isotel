@@ -45,6 +45,22 @@
         <option value="RON">Romanian LEI</option>
     </select>
 </div>
+<h3>
+    Rent this location
+</h3>
+<form id="rentalForm">
+    <fieldset>
+        <div class="form-group">
+            <label for="username">Full name</label>
+            <input type="text" class="form-control" id="username" placeholder="Enter your full name">
+        </div>
+        <div class="form-group">
+            <label for="phoneNumber">Phone number</label>
+            <input type="text" class="form-control" id="phoneNumber" placeholder="Enter your phone number">
+        </div>
+        <button class="btn btn-primary" onclick="rentLocation(); return false;">Submit</button>
+    </fieldset>
+</form>
 <script>
     var geocoder;
     var map;
@@ -98,6 +114,44 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDUArhkcIIqipeW4KmPjPmDKyNrsZKQAio&callback=initMap"
         async defer></script>
 <script>
+    function rentLocation(){
+        let id = rentId;
+        let username = document.getElementById('username').value.toString();
+        let phoneNumber = document.getElementById('phoneNumber').value.toString();
+        console.log(id);
+        console.log(username);
+        console.log(phoneNumber);
+        let mutation = 'mutation RentLocation($id:Int, $username: String, $phoneNumber: String){\n' +
+            '  occupyRent(id: $id, username: $username, userPhoneNumber: $phoneNumber){\n' +
+            '    success\n' +
+            '  }\n' +
+            '}'
+        fetch('http://localhost:15507/graphql', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                query: mutation,
+                variables: {id, username, phoneNumber}
+            })
+        })
+            .then(r => {
+                console.log(r);
+                r.json();
+            })
+            .then(data => {
+                var result = data.ok
+                console.log(data);
+                if(result === true){
+                    alert("Location rented successfully");
+                }
+                else {
+                    alert("Upsy, an error occured");
+                }
+            });
+    }
     function setRentPrice(id, currency){
         let query = 'query GetRent($id: Int!, $currency: String){\n' +
             '  rent(id: $id, currency: $currency){\n' +
