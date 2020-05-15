@@ -33,8 +33,17 @@
     <h1 id="address" class="display-3"></h1>
     <h2 id="landlordName"></h2>
     <hr class="my-4">
+    <p class="lead" id="price"></p>
     <p class="lead">Here's the location</p>
     <div id="map"></div>
+</div>
+<div class="form-group">
+    <p class="lead">Preferred currency</p>
+    <select class="custom-select" onchange="setRentPrice(rentId, value)">
+        <option value="USD">US Dollars</option>
+        <option value="EUR">Euros</option>
+        <option value="RON">Romanian LEI</option>
+    </select>
 </div>
 <script>
     var geocoder;
@@ -89,6 +98,32 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDUArhkcIIqipeW4KmPjPmDKyNrsZKQAio&callback=initMap"
         async defer></script>
 <script>
+    function setRentPrice(id, currency){
+        let query = 'query GetRent($id: Int!, $currency: String){\n' +
+            '  rent(id: $id, currency: $currency){\n' +
+            '    pricePerDay\n' +
+            '  }\n' +
+            '}'
+        fetch('http://localhost:15507/graphql', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                query,
+                variables: {id, currency}
+            })
+        })
+            .then(r => r.json())
+            .then(data => {
+                var result = data['data']['rent']['pricePerDay'];
+                console.log(result);
+                document.getElementById('price').innerHTML = 'for the price of ' + result + " " + currency + " per day";
+            });
+
+    }
+
     function displayRequestResult(result){
         document.getElementById('address').innerHTML = address;
         query = 'query GetLandlordForId($id: Int!){\n' +
@@ -130,6 +165,7 @@
     let address = urlParams.get('rent_address');
     let landlordId = urlParams.get('landlord_id');
     let city = urlParams.get('city');
+    setRentPrice(rentId, 'USD');
     displayRequestResult(landlordId);
     address = formFullAddress(address, city);
     initMap();
