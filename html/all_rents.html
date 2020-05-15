@@ -8,7 +8,6 @@
     <title>All rents</title>
     <link rel="stylesheet" href="../css/bootstrap.css">
     <link rel="stylesheet" href="../css/style-rents.css">
-    <link rel="script" href="../js/all_rents.js">
 </head>
 <body>
 <nav class="navbar navbar-inverse">
@@ -36,6 +35,7 @@
 <table id="excelDataTable" class="table table-hover">
     <thead>
     <tr>
+        <th scope="col">Id</th>
         <th scope="col">Address</th>
         <th scope="col">Availability</th>
         <th scope="col">City</th>
@@ -46,16 +46,20 @@
 
 <script>
     let myList;
-
+    function goToRent(selector){
+        document.location.href = 'rent.html?rent_id=' + encodeURIComponent(selector.cells[0].innerHTML) + '&rent_address=' +
+            encodeURIComponent(selector.cells[1].innerHTML) + '&city=' + encodeURIComponent(selector.cells[3].innerHTML) +
+                '&landlord_id=' + encodeURIComponent(selector.cells[4].innerHTML);
+    }
     function buildHtmlTable(selector) {
         var columns = addAllColumnHeaders(myList, selector);
         console.log('started building table');
-        for (var i = 0; i < myList.length; i++) {
-            var row$ = $('<tr/>');
+        for (let i = 0; i < myList.length; i++) {
+            var row$ = $('<tr onclick="goToRent(this)"/>');
             for (var colIndex = 0; colIndex < columns.length; colIndex++) {
                 var cellValue = myList[i][columns[colIndex]];
                 if (cellValue == null) cellValue = "";
-                if (cellValue >= 0 && cellValue <= 9){
+                if (cellValue >= 0 && cellValue <= 9 && colIndex > 1 && colIndex !== 4){
                     switch (cellValue) {
                         case 1:
                             cellValue = "Brasov";
@@ -83,13 +87,17 @@
                             break;
                     }
                 }
-                if (cellValue == true){
+                if (cellValue === true){
                     cellValue = "Available";
                 }
-                if(cellValue == false){
+                if(cellValue === false){
                     cellValue = "Not available";
                 }
-                row$.append($('<td/>').html(cellValue));
+                if(colIndex === 4){
+                    row$.append($('<td style="opacity: 0;"/>').html(cellValue));
+                }
+                else
+                    row$.append($('<td/>').html(cellValue));
             }
             $(selector).append(row$);
         }
@@ -108,13 +116,12 @@
                 }
             }
         }
-        //$(selector).append(headerTr$);
 
         return columnSet;
     }
     let query = 'query{\n' +
         '    available_rents{\n' +
-        '      address, isAvailable, cityId\n' +
+        '      rentId, address, isAvailable, cityId, landlordId\n' +
         '    }\n' +
         '  }'
     fetch('http://localhost:15507/graphql', {

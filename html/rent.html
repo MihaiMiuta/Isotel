@@ -29,6 +29,111 @@
         </div>
     </div>
 </nav>
+<div class="jumbotron rent-container">
+    <h1 id="address" class="display-3"></h1>
+    <h2 id="landlordName"></h2>
+    <hr class="my-4">
+    <p class="lead">Here's the location</p>
+    <div id="map"></div>
+</div>
+<script>
+    var geocoder;
+    var map;
+
+    function initMap() {
+        geocoder = new google.maps.Geocoder();
+        var latlng = new google.maps.LatLng(-34.397, 150.644);
+        var myOptions = {
+            zoom: 8,
+            center: latlng,
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+            },
+            navigationControl: true,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("map"), myOptions);
+        if (geocoder) {
+            geocoder.geocode({
+                'address': address
+            }, function(results, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    if (status != google.maps.GeocoderStatus.ZERO_RESULTS) {
+                        map.setCenter(results[0].geometry.location);
+
+                        var infowindow = new google.maps.InfoWindow({
+                            content: '<b>' + address + '</b>',
+                            size: new google.maps.Size(150, 50)
+                        });
+
+                        var marker = new google.maps.Marker({
+                            position: results[0].geometry.location,
+                            map: map,
+                            title: address
+                        });
+                        google.maps.event.addListener(marker, 'click', function() {
+                            infowindow.open(map, marker);
+                        });
+
+                    } else {
+                        alert("No results found");
+                    }
+                } else {
+                    alert("Geocode was not successful for the following reason: " + status);
+                }
+            });
+        }
+    }
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDUArhkcIIqipeW4KmPjPmDKyNrsZKQAio&callback=initMap"
+        async defer></script>
+<script>
+    function displayRequestResult(result){
+        document.getElementById('address').innerHTML = address;
+        query = 'query GetLandlordForId($id: Int!){\n' +
+            '  landlord(id: $id){\n' +
+            '    firstName, lastName, phoneNumber\n' +
+            '  }\n' +
+            '}';
+        id = result;
+        fetch('http://localhost:15507/graphql', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                query,
+                variables: {id}
+            })
+        })
+            .then(r => r.json())
+            .then(data => {
+                result = data['data']['landlord'];
+                console.log(result);
+                document.getElementById('landlordName').innerHTML = 'owned by ' + result['firstName'] + " " + result['lastName'] +
+                ', ' + result['phoneNumber'];
+            });
+    }
+
+    function formFullAddress(address, city){
+        let regex = new RegExp('.+?(?=,)');
+        address = regex.exec(address);
+        address += ', ' + city + ', Romania';
+        return address;
+    }
+    const queryString = window.location.search;
+    console.log(queryString);
+    const urlParams = new URLSearchParams(queryString);
+    let rentId = urlParams.get('rent_id');
+    let address = urlParams.get('rent_address');
+    let landlordId = urlParams.get('landlord_id');
+    let city = urlParams.get('city');
+    displayRequestResult(landlordId);
+    address = formFullAddress(address, city);
+    initMap();
+</script>
 
 </body>
 </html>

@@ -38,31 +38,40 @@
 <table id="excelDataTable" class="table table-hover">
     <thead>
     <tr>
+        <th scope="col">Id</th>
         <th scope="col">Address</th>
         <th scope="col">Availability</th>
-        <th scope="col">Price per day</th>
     </tr>
     </thead>
 </table>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script>
     let myList;
+    function goToRent(selector){
+        document.location.href = 'rent.html?rent_id=' + encodeURIComponent(selector.cells[0].innerHTML) + '&rent_address=' +
+            encodeURIComponent(selector.cells[1].innerHTML) + '&city=Iasi' +
+            '&landlord_id=' + encodeURIComponent(selector.cells[3].innerHTML);
+    }
 
     function buildHtmlTable(selector) {
         var columns = addAllColumnHeaders(myList, selector);
         console.log('started building table');
         for (var i = 0; i < myList.length; i++) {
-            var row$ = $('<tr/>');
+            var row$ = $('<tr onclick="goToRent(this)"/>');
             for (var colIndex = 0; colIndex < columns.length; colIndex++) {
                 var cellValue = myList[i][columns[colIndex]];
                 if (cellValue == null) cellValue = "";
-                if (cellValue == true){
+                if (cellValue === true){
                     cellValue = "Available";
                 }
-                if(cellValue == false){
+                if(cellValue === false){
                     cellValue = "Not available";
                 }
-                row$.append($('<td/>').html(cellValue));
+                if(colIndex === 3){
+                    row$.append($('<td style="opacity: 0;"/>').html(cellValue));
+                }
+                else
+                    row$.append($('<td/>').html(cellValue));
             }
             $(selector).append(row$);
         }
@@ -87,7 +96,7 @@
     }
     let query = 'query GetRentForCity($id: Int!){\n' +
         '  rents_for_city(id: $id){\n' +
-        '    address, isAvailable, pricePerDay\n' +
+        '    rentId, address, isAvailable, landlordId\n' +
         '  }\n' +
         '}'
     let id = 6;
