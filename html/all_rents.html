@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="scaffolded-by" content="https://github.com/dart-lang/stagehand">
+    <title>All rents</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/style-rents.css">
+    <link rel="script" href="../js/all_rents.js">
+</head>
+<body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" id="title" href="../index.html">Isotel</a>
+        </div>
+
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
+            <ul class="nav navbar-nav">
+                <li><a href="./all_rents.html">Show all rents</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<h1 class="title">
+    These are all the rents
+</h1>
+<table id="excelDataTable" class="table table-hover">
+    <thead>
+    <tr>
+        <th scope="col">Address</th>
+        <th scope="col">Availability</th>
+        <th scope="col">City</th>
+    </tr>
+    </thead>
+</table>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+<script>
+    let myList;
+
+    function buildHtmlTable(selector) {
+        var columns = addAllColumnHeaders(myList, selector);
+        console.log('started building table');
+        for (var i = 0; i < myList.length; i++) {
+            var row$ = $('<tr/>');
+            for (var colIndex = 0; colIndex < columns.length; colIndex++) {
+                var cellValue = myList[i][columns[colIndex]];
+                if (cellValue == null) cellValue = "";
+                if (cellValue >= 0 && cellValue <= 9){
+                    switch (cellValue) {
+                        case 1:
+                            cellValue = "Brasov";
+                            break;
+                        case 2:
+                            cellValue = "Bucharest";
+                            break;
+                        case 3:
+                            cellValue = "Cluj";
+                            break;
+                        case 4:
+                            cellValue = "Constanta";
+                            break;
+                        case 5:
+                            cellValue = "Craiova";
+                            break;
+                        case 6:
+                            cellValue = "Iasi";
+                            break;
+                        case 7:
+                            cellValue = "Oradea";
+                            break;
+                        case 8:
+                            cellValue = "Timisoara";
+                            break;
+                    }
+                }
+                if (cellValue == true){
+                    cellValue = "Available";
+                }
+                if(cellValue == false){
+                    cellValue = "Not available";
+                }
+                row$.append($('<td/>').html(cellValue));
+            }
+            $(selector).append(row$);
+        }
+    }
+    function addAllColumnHeaders(myList, selector) {
+        console.log('adding column headers');
+        var columnSet = [];
+        var headerTr$ = $('<tr/>');
+
+        for (var i = 0; i < myList.length; i++) {
+            var rowHash = myList[i];
+            for (var key in rowHash) {
+                if ($.inArray(key, columnSet) === -1) {
+                    columnSet.push(key);
+                    headerTr$.append($('<th/>').html(key));
+                }
+            }
+        }
+        //$(selector).append(headerTr$);
+
+        return columnSet;
+    }
+    let query = 'query{\n' +
+        '    available_rents{\n' +
+        '      address, isAvailable, cityId\n' +
+        '    }\n' +
+        '  }'
+    fetch('http://localhost:15507/graphql', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            query
+        })
+    })
+        .then(r => r.json())
+        .then(data => {
+            myList = data['data']['available_rents'];
+            console.log(myList);
+            buildHtmlTable('#excelDataTable');
+        });
+
+</script>
+
+</body>
+</html>

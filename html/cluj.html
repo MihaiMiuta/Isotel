@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="scaffolded-by" content="https://github.com/dart-lang/stagehand">
+    <title>Cluj</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/style-cities.css">
+</head>
+<body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" id="title" href="../index.html">Isotel</a>
+        </div>
+
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
+            <ul class="nav navbar-nav">
+                <li><a href="./all_rents.html">Show all rents</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<h1 class="title">
+    Cluj
+</h1>
+<h3 class="subtitle">
+    These are all the rents for Cluj
+</h3>
+<table id="excelDataTable" class="table table-hover">
+    <thead>
+    <tr>
+        <th scope="col">Address</th>
+        <th scope="col">Availability</th>
+        <th scope="col">Price per day</th>
+    </tr>
+    </thead>
+</table>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script>
+    let myList;
+
+    function buildHtmlTable(selector) {
+        var columns = addAllColumnHeaders(myList, selector);
+        console.log('started building table');
+        for (var i = 0; i < myList.length; i++) {
+            var row$ = $('<tr/>');
+            for (var colIndex = 0; colIndex < columns.length; colIndex++) {
+                var cellValue = myList[i][columns[colIndex]];
+                if (cellValue == null) cellValue = "";
+                if (cellValue == true){
+                    cellValue = "Available";
+                }
+                if(cellValue == false){
+                    cellValue = "Not available";
+                }
+                row$.append($('<td/>').html(cellValue));
+            }
+            $(selector).append(row$);
+        }
+    }
+    function addAllColumnHeaders(myList, selector) {
+        console.log('adding column headers');
+        var columnSet = [];
+        var headerTr$ = $('<tr/>');
+
+        for (var i = 0; i < myList.length; i++) {
+            var rowHash = myList[i];
+            for (var key in rowHash) {
+                if ($.inArray(key, columnSet) === -1) {
+                    columnSet.push(key);
+                    headerTr$.append($('<th/>').html(key));
+                }
+            }
+        }
+        //$(selector).append(headerTr$);
+
+        return columnSet;
+    }
+    let query = 'query GetRentForCity($id: Int!){\n' +
+        '  rents_for_city(id: $id){\n' +
+        '    address, isAvailable, pricePerDay\n' +
+        '  }\n' +
+        '}'
+    let id = 3;
+    fetch('http://localhost:15507/graphql', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            query,
+            variables: {id}
+        })
+    })
+        .then(r => r.json())
+        .then(data => {
+            myList = data['data']['rents_for_city'];
+            console.log(myList);
+            buildHtmlTable('#excelDataTable');
+        });
+
+</script>
+</body>
+</html>
