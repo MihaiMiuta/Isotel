@@ -137,19 +137,14 @@
                 variables: {id, username, phoneNumber}
             })
         })
-            .then(r => {
-                console.log(r);
-                r.json();
-            })
-            .then(data => {
-                var result = data.ok
-                console.log(data);
-                if(result === true){
+            .then(function (response) {
+                let status = response.status
+                console.log(response.status);
+                if(status == 200){
                     alert("Location rented successfully");
                 }
-                else {
-                    alert("Upsy, an error occured");
-                }
+                else
+                    alert("Something went wrong");
             });
     }
     function setRentPrice(id, currency){
